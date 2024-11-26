@@ -6,12 +6,11 @@
 
 ## 1. branch
 
-```
-main, develop, feature 브랜치가 있습니다! 각자 feature 에서 구현중인,구현하고 싶은 기능을
-feature/~~~ <- 만드시면 됩니다!
+🚨 Slack에 말씀드린대로 변경사항이 있습니다!
 
-< 예진님 코드는 뼈대가 되는 코드이므로 현재 develop 브랜치에 있습니다. >
-< 창규님이 개발중이신 streamlit 은 feature/streamlit에 업로드하시면 테스트한 뒤 develop에 merge 하곘습니다>
+```
+전에 말씀드렸던 feature/~~~ 방식으로 만드시는 게 아닌 제가 만들어둔 <이름> branch에 업로드 및 업데이트 하시면됩니다.
+feature,develop,main 브랜치는 건드리지마시고, 제가 확인 후 merge하는 방식으로 하겠습니다.
 ```
 
 예시로 음성인식 기능을 구현할 거라면 
