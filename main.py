@@ -1,11 +1,10 @@
 import streamlit as st
-import speech_recognition as sr
 from streamlit_chat import message
 from openai import OpenAI
 from dotenv import load_dotenv
-import pyttsx3
 import os
 import json
+import Modules.speech as speech
 
 load_dotenv()
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -16,6 +15,10 @@ st.title("Chat bot test")
 placeholder = st.empty()
 
 def init():
+    # 경로가 없으면 생성
+    if not os.path.exists("History"):
+        os.makedirs("History")
+
     if "openai_model" not in st.session_state:
         st.session_state["openai_model"] = "gpt-4o-mini"
     if "messages" not in st.session_state:  # 입력값에 대한 메시지
@@ -44,6 +47,11 @@ print(st.session_state)
 
 # 사이드바
 with st.sidebar:
+    # 대화방 추가
+    if st.button("새로운 방", type="primary"):
+        st.session_state["messages"] = []
+        st.session_state["active"] = ""
+
     st.title('Chat Rooms')
     sidebar_placeholder = st.sidebar.empty() # 사이드바에 다른 요소 추가시키기 위함        
     for i, room in enumerate(st.session_state.side_data):
@@ -103,29 +111,6 @@ def session_save(data):
                 json.dump(json_data, f)
     
 
-# 음성 입력을 위한 함수
-def get_audio_input():
-    r = sr.Recognizer()
-
-    with sr.Microphone() as source:
-        audio = r.listen(source)
-
-    # 구글 웹 음성 API로 인식하기 
-    try:
-        print("Google Speech : " + r.recognize_google(audio, language='ko'))
-        return r.recognize_google(audio, language='ko')
-    except sr.UnknownValueError as e:
-        print("Google Speech ".format(e))
-        return None
-    except sr.RequestError as e:
-        print("Could not request results from Google Speech Recognition service; {0}".format(e))
-        return None
-
-def text_to_speech(text):       # TTS 
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
-
 def chatbot(prompt, isVoice):
     # 기본 메시지 화면에 표시
     for message in st.session_state["messages"]:
@@ -156,12 +141,11 @@ def chatbot(prompt, isVoice):
         session_save(data)
         
         if isVoice:     # isVoice 파라미터에 따라 읽기
-            text_to_speech(response)
+            speech.text_to_speech(response)
 
 if st.button("마이크"):             # 마이크 입력시 보이스 재생
-    user_input = get_audio_input()
+    user_input = speech.get_audio_input()
     if user_input is not None:
-        text_to_speech(user_input)
         chatbot(user_input, True)
 
 if prompt := st.chat_input("Say something"):        # 채팅 입력시

@@ -1,5 +1,4 @@
 .env
 History/*
 *.json
-__pycache__/stt_handler.cpython-311.pyc
-modules/__pycache__/stt_handler.cpython-311.pyc
+*.pyc
