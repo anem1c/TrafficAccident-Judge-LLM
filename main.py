@@ -1,14 +1,27 @@
+import os
+import json
 import streamlit as st
 import speech_recognition as sr
 from streamlit_chat import message
 from openai import OpenAI
 from dotenv import load_dotenv
 import pyttsx3
-import os
-import json
+from VectorStoreLoad import vector_store_law,vector_store_rate,vector_store_situation,retriever,retriever1,retriever2,embeddings
+from ChatbotPrompt import contextual_prompt
+from chat_bot 
+import ChatPrompt
+from langchain_openai import ChatOpenAI
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain.chains import LLMChain
+from difflib import SequenceMatcher
+
 
 load_dotenv()
-client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+# client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+model = ChatOpenAI(model="gpt-4o-mini")
 now_dir = os.getcwd()
 
 st.title("Chat bot test")
@@ -104,7 +117,7 @@ def session_save(data):
     
 
 # 음성 입력을 위한 함수
-def get_audio_input():
+def get_audio_input(): 
     r = sr.Recognizer()
 
     with sr.Microphone() as source:
@@ -126,37 +139,28 @@ def text_to_speech(text):       # TTS
     engine.say(text)
     engine.runAndWait()
 
+# 챗봇 함수
 def chatbot(prompt, isVoice):
     # 기본 메시지 화면에 표시
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
             st.write(message["content"])
-
+    
+    # 사용자 메시지 저장
     data = {"role":"user", "content":prompt}
     st.session_state.messages.append(data)
     session_save(data)
 
-    with st.chat_message("user"):  # 사용자 채팅 표시
+    # 사용자 채팅 표시
+    with st.chat_message("user"): 
         st.write(prompt)
     
+    # OpenAI API 호출
     with st.chat_message("assistant"):      # 답변 채팅 표시 - stream 실시간 채팅
-        stream = client.chat.completions.create(
-            model = st.session_state["openai_model"],
-            messages = [
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream = True,
-        )
-        response = st.write_stream(stream)
 
-        data = {"role":"assistant", "content":response}
-        st.session_state.messages.append({"role":"assistant", "content":response})
+        # 이시헌 시작
         
-        session_save(data)
-        
-        if isVoice:     # isVoice 파라미터에 따라 읽기
-            text_to_speech(response)
+
 
 if st.button("마이크"):             # 마이크 입력시 보이스 재생
     user_input = get_audio_input()
@@ -168,3 +172,4 @@ if prompt := st.chat_input("Say something"):        # 채팅 입력시
     chatbot(prompt, False)
 
 
+ 
