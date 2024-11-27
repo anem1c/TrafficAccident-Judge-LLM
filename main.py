@@ -10,7 +10,7 @@ load_dotenv()
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 now_dir = os.getcwd()
 
-st.title("Chat bot test")
+st.title("교통사고 과실 비율 챗봇")
 
 placeholder = st.empty()
 
@@ -148,7 +148,7 @@ if st.button("마이크"):             # 마이크 입력시 보이스 재생
     if user_input is not None:
         chatbot(user_input, True)
 
-if prompt := st.chat_input("Say something"):        # 채팅 입력시
+if prompt := st.chat_input("메시지를 입력해주세요 "):        # 채팅 입력시
     chatbot(prompt, False)
 
 
