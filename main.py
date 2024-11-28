@@ -1,8 +1,9 @@
 from Modules.ModuleImport import *  # 모든 모듈을 불러옵니다.
 from Modules.VectorStore import *
 from Modules.prompt import contextual_prompt
-from Modules.ContextToPrompt import *
-from Modules.RetrieverWrapper import *
+from Modules.ContextToPrompt import ContextToPrompt
+from Modules.RetrieverWrapper import RetrieverWrapper
+
 
 load_dotenv()
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -18,46 +19,9 @@ placeholder = st.empty()
 # 벡터스토어,리트리버 잘 불러옴
 # 프롬프트 템플릿 잘 불러옴
 
-
 class SimplePassThrough:
     def invoke(self, inputs, **kwargs):
         return inputs
-
-class ContextToPrompt:
-    def __init__(self, prompt_template):
-        self.prompt_template = prompt_template
-
-    def invoke(self, inputs):
-        # 문서 내용을 텍스트로 변환
-        if isinstance(inputs, list):
-            context_text = "\n".join([doc.page_content for doc in inputs])
-        else:
-            context_text = inputs
-
-        # 프롬프트 템플릿에 적용
-        formatted_prompt = self.prompt_template.format_messages(
-            context=context_text,
-            question=inputs.get("question", "")
-        )
-        return formatted_prompt
-
-# Retriever를 invoke() 메서드로 래핑하는 클래스 정의
-
-
-class RetrieverWrapper:
-    def __init__(self, retriever):
-        self.retriever = retriever
-
-    def invoke(self, inputs):
-        if isinstance(inputs, dict):
-            query = inputs.get("question", "")
-        else:
-            query = inputs
-        # 검색 수행
-        response_docs = self.retriever.get_relevant_documents(query)
-        return response_docs
-
-# 비슷한 상황에서 판결된 과실 비율 문서 검색
 
 
 def find_most_similar_doc(user_accident):
