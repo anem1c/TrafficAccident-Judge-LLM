@@ -3,13 +3,15 @@ from Modules.VectorStore import *
 from Modules.prompt import contextual_prompt
 from Modules.ContextToPrompt import ContextToPrompt
 from Modules.RetrieverWrapper import RetrieverWrapper
+import Modules.Speech as Speech
 
 load_dotenv()
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 now_dir = os.getcwd()
+chat_model = ChatOpenAI(model="gpt-4o-mini")
 
 # 실시간 스트리밍을 지원하는 모델 설정
-mode = openai.ChatCompletion  # OpenAI의 ChatCompletion을 사용
+# mode = openai.ChatCompletion  # OpenAI의 ChatCompletion을 사용
 
 st.title("교통사고 과실 비율 챗봇")
 
@@ -71,7 +73,7 @@ def init():
             for file in prompt_file:
                 with open(now_dir + "/History/" + file, 'r', encoding='UTF8') as f:
                     json_data = json.load(f)
-                    side_title = json_data[0]["content"][0:20]
+                    side_title = json_data[0]["content"][0:10]
                     st.session_state.side_data.append({side_title:file})
 init()
 
@@ -141,7 +143,7 @@ def session_save(data):
             with open(history_dir + file_name, 'w', encoding='UTF8') as f:
                 json.dump([data], f)
 
-                room_name = data["content"][0:20]
+                room_name = data["content"][0:10]
                 st.session_state["active"] = file_name
                 st.session_state.side_data.insert(0,{room_name:file_name})
                 
@@ -173,7 +175,7 @@ def make_rag_chain(query):
         "context1": RetrieverWrapper(retriever1),
         'context2': RetrieverWrapper(retriever2),
         "prompt": ContextToPrompt(contextual_prompt),
-        "llm": mode  # mode는 이제 OpenAI의 ChatCompletion 객체
+        "llm": chat_model  # mode는 이제 OpenAI의 ChatCompletion 객체
     }
 
     # 1. 검색 단계: context, context1, context2로부터 관련 정보 검색
@@ -207,18 +209,20 @@ def chatbot(query, isVoice):
     # 메시지를 'role'과 'content'로 변환하여 전달
     with st.chat_message("assistant"):  # 답변 채팅 표시 - stream 실시간 채팅
         prompt_message = make_rag_chain(query)
-        reponse = mode.invoke(prompt_message)
-        print(response.content)
+        llm_response = chat_model.invoke(prompt_message)
+        response = llm_response.content
+        print(response)
+        st.write(response)
 
-        stream = client.chat.completions.create(
-            model=st.session_state["openai_model"],
-            messages = [
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
-        response = st.write_stream(stream)
+        # stream = client.chat.completions.create(
+        #     model=st.session_state["openai_model"],
+        #     messages = [
+        #         {"role": m["role"], "content": m["content"]}
+        #         for m in st.session_state.messages
+        #     ],
+        #     stream=True,
+        # )
+        # response = st.write_stream(stream)
 
         data = {"role":"assistant", "content":response}
         st.session_state.messages.append({"role":"assistant", "content":response})

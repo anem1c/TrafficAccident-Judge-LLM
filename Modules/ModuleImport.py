@@ -18,4 +18,3 @@ from langchain.chains import LLMChain
 # 비슷한 상황에서 판결된 과실 비율 문서 검색
 from difflib import SequenceMatcher
 import natsort
-import Speech
