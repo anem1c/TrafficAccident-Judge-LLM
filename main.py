@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import json
 import Modules.speech as speech
+import natsort
 
 load_dotenv()
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -27,8 +28,8 @@ def init():
         st.session_state["active"] = ""
     if "side_data" not in st.session_state: # 사이드바에 표시하기위한 데이터
         st.session_state["side_data"] = []
-    if "transcript" not in st.session_state: # 음성 번역
-        st.session_state["transcript"] = ""
+    if 'rerun' not in st.session_state:
+        st.session_state.rerun = False
 
     # 대화내역 불러오기 위한 데이터 초기화
     if os.path.isdir(now_dir + "/History"):
@@ -43,7 +44,6 @@ def init():
                     side_title = json_data[0]["content"][0:20]
                     st.session_state.side_data.append({side_title:file})
 init()
-print(st.session_state)
 
 # 사이드바
 with st.sidebar:
@@ -56,19 +56,38 @@ with st.sidebar:
     sidebar_placeholder = st.sidebar.empty() # 사이드바에 다른 요소 추가시키기 위함        
     for i, room in enumerate(st.session_state.side_data):
         for room_name, file_name in room.items():
-            button_key = f"{room_name}_{file_name}{i}"  
-            # 선택된 버튼 다른 타입으로 표시 (보류)
-            if st.button(room_name, key=button_key):  # 각 대화방 이름을 버튼으로 출력
-                st.session_state["messages"] = []
-                st.session_state["active"] = now_dir + "/History/" + file_name
-                with placeholder.container():
-                    with open(os.path.join(now_dir, "History", file_name), 'r', encoding='UTF8') as f:
-                        json_data = json.load(f)
-                        for message in json_data:
-                            st.session_state.messages.append({"role":message["role"], "content":message["content"]})
-                            with st.chat_message(message["role"]):
-                                st.write(message["content"])
-                 
+            cols = st.columns([4, 1])  # 버튼과 작업 버튼을 나누기 위해 컬럼 사용
+            with cols[0]:
+                # type - 선택된 버튼 다른 타입으로 표시 (보류)
+                if st.button(room_name, key=f"{room_name}_{file_name}{i}"):  # 각 대화방 이름을 버튼으로 출력
+                    st.session_state["messages"] = []
+                    st.session_state["active"] = file_name
+                    with placeholder.container():
+                        with open(os.path.join(now_dir, "History", file_name), 'r', encoding='UTF8') as f:
+                            json_data = json.load(f)
+                            for message in json_data:
+                                st.session_state.messages.append({"role":message["role"], "content":message["content"]})
+                                with st.chat_message(message["role"]):
+                                    st.write(message["content"])
+            with cols[1]:
+                if st.button("🗑️", key=f"delete_{room_name}_{i}"):
+                    # 삭제 로직
+                    file_path = os.path.join("History", file_name)
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    del st.session_state["side_data"][i]
+
+                    if file_name == st.session_state["active"]:
+                        st.session_state["messages"] = []
+                        st.session_state["active"] = ""
+
+                    st.session_state["rerun"] = True
+
+if st.session_state["rerun"]:
+    print("rerun")
+    st.session_state["rerun"] = False
+    st.rerun()
+
 # 채팅 내역 session_state 저장
 def session_save(data):
     now_dir = os.getcwd()
@@ -76,28 +95,35 @@ def session_save(data):
     # History 폴더에 파일이 있는지 확인
     if os.path.isdir(history_dir):
         prompt_file = os.listdir(history_dir)
-        file_cnt = len(prompt_file)+1
+
+        # 마지막 파일을 기준으로 넘버링
+        sorted_file_list = natsort.natsorted(prompt_file)
+        last_file = sorted_file_list[len(sorted_file_list)-1].split(".")[0]
+        file_cnt = int(last_file.replace("history", "")) + 1
 
         file_name = "history" + str(file_cnt) + ".json"
 
         active = st.session_state.active
+        active_file = now_dir + "/History/" + active 
+
         # 첫 질문 - active 값 없음 - dump로 생성
         if active == "":
             with open(history_dir + file_name, 'w', encoding='UTF8') as f:
                 json.dump([data], f)
 
                 room_name = data["content"][0:20]
-                st.session_state["active"] = f.name
+                st.session_state["active"] = file_name
                 st.session_state.side_data.insert(0,{room_name:file_name})
                 
                 with sidebar_placeholder.container():
                     button_key = f"{room_name}_{file_name}{len(st.session_state.side_data)}"  
                     # 동적으로 버튼 추가시 - 클릭이벤트 비정상 작동 - (보류)
                     if st.button(room_name, key=button_key):  # 각 대화방 이름을 버튼으로 출력
+                        st.session_state["rerun"] = True
                         print("new btn")
         # 두번째는 - session_state 값 있음 - update
-        elif os.path.isfile(active):
-            with open(active, 'r', encoding='UTF8') as f:
+        elif os.path.isfile(active_file):
+            with open(active_file, 'r', encoding='UTF8') as f:
                 try:
                     # 기존 대화 불러오기
                     json_data = json.load(f)
@@ -107,7 +133,7 @@ def session_save(data):
                     json_data = []  # 파일이 비어있으면 초기화
                     
                 json_data.append(data)
-            with open(active, 'w', encoding='UTF8') as f:
+            with open(active_file, 'w', encoding='UTF8') as f:
                 json.dump(json_data, f)
     
 
