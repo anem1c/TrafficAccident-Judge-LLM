@@ -130,8 +130,11 @@ def session_save(data):
 
         # 마지막 파일을 기준으로 넘버링
         sorted_file_list = natsort.natsorted(prompt_file)
-        last_file = sorted_file_list[len(sorted_file_list)-1].split(".")[0]
-        file_cnt = int(last_file.replace("history", "")) + 1
+        if len(sorted_file_list) > 0:
+            last_file = sorted_file_list[len(sorted_file_list)-1].split(".")[0]
+            file_cnt = int(last_file.replace("history", "")) + 1
+        else:
+            file_cnt = 1
 
         file_name = "history" + str(file_cnt) + ".json"
 
