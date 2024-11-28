@@ -1,19 +1,49 @@
-import streamlit as st
-from streamlit_chat import message
-from openai import OpenAI
-from dotenv import load_dotenv
-import os
-import json
-import Modules.speech as speech
-import natsort
+from Modules.ModuleImport import *  # 모든 모듈을 불러옵니다.
+from Modules.VectorStore import *
+from Modules.prompt import contextual_prompt
+from Modules.ContextToPrompt import ContextToPrompt
+from Modules.RetrieverWrapper import RetrieverWrapper
 
 load_dotenv()
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 now_dir = os.getcwd()
 
+# 실시간 스트리밍을 지원하는 모델 설정
+mode = openai.ChatCompletion  # OpenAI의 ChatCompletion을 사용
+
 st.title("교통사고 과실 비율 챗봇")
 
 placeholder = st.empty()
+
+class SimplePassThrough:
+    def invoke(self, inputs, **kwargs):
+        return inputs
+
+
+def find_most_similar_doc(user_accident):
+    """
+    사용자가 제공한 사고 정보와 가장 유사한 문서를 FAISS 벡터 스토어에서 검색합니다.
+
+    Args:
+        user_accident (str): 사용자가 입력한 사고 상황 텍스트.
+        vector_store (FAISS): FAISS 벡터 스토어 객체.
+        embeddings (OpenAIEmbeddings): 임베딩 모델 객체.
+
+    Returns:
+        dict: 가장 유사한 문서의 정보 (텍스트와 메타데이터).
+    """
+    # 사용자 입력 텍스트의 임베딩 계산
+    query_embedding = embeddings.embed_query(user_accident)
+
+    # 벡터 DB에서 유사한 문서 검색
+    search_results = vector_store_rate.similarity_search_by_vector(
+        query_embedding, k=1)
+
+    # 결과 반환 (가장 유사한 문서 1개)
+    if search_results:
+        return search_results[0]  # 첫 번째 결과 반환
+    else:
+        return None  # 검색 결과가 없을 경우
 
 def init():
     # 경로가 없으면 생성
@@ -135,29 +165,58 @@ def session_save(data):
                 json_data.append(data)
             with open(active_file, 'w', encoding='UTF8') as f:
                 json.dump(json_data, f)
-    
 
-def chatbot(prompt, isVoice):
+def make_rag_chain(query):
+        # RAG 체인 정의
+    rag_chain_debug = {
+        "context": RetrieverWrapper(retriever),
+        "context1": RetrieverWrapper(retriever1),
+        'context2': RetrieverWrapper(retriever2),
+        "prompt": ContextToPrompt(contextual_prompt),
+        "llm": mode  # mode는 이제 OpenAI의 ChatCompletion 객체
+    }
+
+    # 1. 검색 단계: context, context1, context2로부터 관련 정보 검색
+    response_docs = rag_chain_debug["context"].invoke({"question": query})
+    response_docs1 = rag_chain_debug["context1"].invoke({"question": query})
+    response_docs2 = find_most_similar_doc(
+        response_docs1[0].metadata['summary'].content)
+
+    # 'contextual_prompt'를 사용하여 프롬프트를 생성합니다.
+    prompt_messages = contextual_prompt.format_messages(
+        context=response_docs,  # 검색된 context 데이터
+        context1=response_docs1,  # 검색된 context1 데이터
+        context2=response_docs2,  # 검색된 context2 데이터
+        question=query  # 사용자의 질문
+    )
+    return prompt_messages
+
+def chatbot(query, isVoice):
     # 기본 메시지 화면에 표시
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
             st.write(message["content"])
 
-    data = {"role":"user", "content":prompt}
+    data = {"role": "user", "content": query}
     st.session_state.messages.append(data)
     session_save(data)
 
     with st.chat_message("user"):  # 사용자 채팅 표시
-        st.write(prompt)
+        st.write(query)
     
-    with st.chat_message("assistant"):      # 답변 채팅 표시 - stream 실시간 채팅
+    # 메시지를 'role'과 'content'로 변환하여 전달
+    with st.chat_message("assistant"):  # 답변 채팅 표시 - stream 실시간 채팅
+        prompt_message = make_rag_chain(query)
+        reponse = mode.invoke(prompt_message)
+        print(response.content)
+
         stream = client.chat.completions.create(
-            model = st.session_state["openai_model"],
+            model=st.session_state["openai_model"],
             messages = [
                 {"role": m["role"], "content": m["content"]}
                 for m in st.session_state.messages
             ],
-            stream = True,
+            stream=True,
         )
         response = st.write_stream(stream)
 
@@ -165,16 +224,14 @@ def chatbot(prompt, isVoice):
         st.session_state.messages.append({"role":"assistant", "content":response})
         
         session_save(data)
-        
+
         if isVoice:     # isVoice 파라미터에 따라 읽기
-            speech.text_to_speech(response)
+            Speech.text_to_speech(response)
 
 if st.button("마이크"):             # 마이크 입력시 보이스 재생
-    user_input = speech.get_audio_input()
+    user_input = Speech.get_audio_input()
     if user_input is not None:
         chatbot(user_input, True)
 
-if prompt := st.chat_input("메시지를 입력해주세요 "):        # 채팅 입력시
-    chatbot(prompt, False)
-
-
+if query := st.chat_input("메시지를 입력해주세요 "):        # 채팅 입력시
+    chatbot(query, False)
