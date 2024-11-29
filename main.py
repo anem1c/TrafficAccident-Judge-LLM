@@ -195,9 +195,13 @@ def make_rag_chain(query):
         'context2': RetrieverWrapper(retriever2),
     }
 
+    # 번역 및 query 변환
+    query_text = translate_chain1.invoke({"language": detect_language(query), "text": query})
+    query_text = query_text.content if hasattr(query_text, "content") else query_text
+
     # 1. 검색 단계: context, context1, context2로부터 관련 정보 검색
-    response_docs = rag_chain_debug["context"].invoke({"question": query})
-    response_docs1 = rag_chain_debug["context1"].invoke({"question": query})
+    response_docs = rag_chain_debug["context"].invoke({"question": query_text})
+    response_docs1 = rag_chain_debug["context1"].invoke({"question": query_text})
     response_docs2 = find_most_similar_doc(response_docs1[0].metadata['summary'].content)
 
     # 'contextual_prompt'를 사용하여 프롬프트를 생성합니다.
@@ -205,7 +209,7 @@ def make_rag_chain(query):
         context=response_docs,  # 검색된 context 데이터
         context1=response_docs1,  # 검색된 context1 데이터
         context2=response_docs2,  # 검색된 context2 데이터
-        question=query,  # 사용자의 질문
+        question=query_text,  # 사용자의 질문
         language=detect_language(query)  
     )
     return prompt_messages
@@ -267,10 +271,6 @@ def chatbot(query, isVoice):
     with st.chat_message("user"):  # 사용자 채팅 표시
         st.write(query)
 
-    # 번역 및 query 변환
-    query_text = translate_chain1.invoke({"language": detect_language(query), "text": query})
-    query_text = query_text.content if hasattr(query_text, "content") else query_text
-
     # 어시스턴트 메시지 출력
     with st.chat_message("assistant"):
         # 스트림 생성
@@ -283,7 +283,7 @@ def chatbot(query, isVoice):
                 ],
                 *[
                     {"role": "system", "content": make_rag_chain(query)[0].content},
-                    {"role": "system", "content": make_rag_chain(query)[1].content},
+                    {"role": "user", "content": make_rag_chain(query)[1].content},
                 ],
             ],
             stream=True,
