@@ -10,7 +10,7 @@
 기능 소개
 
 주요 기능 소개
-
+![image](https://github.com/user-attachments/assets/f2845d42-26df-4c05-9729-b4d9d948f04e)
 트러블 슈팅
 
 사용 기술
