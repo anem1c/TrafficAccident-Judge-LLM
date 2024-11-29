@@ -13,6 +13,7 @@ client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 now_dir = os.getcwd()
 translate_model = ChatOpenAI(model="gpt-4o-mini")
 
+
 # 실시간 스트리밍을 지원하는 모델 설정
 # mode = openai.ChatCompletion  # OpenAI의 ChatCompletion을 사용
 
@@ -181,8 +182,6 @@ def session_save(data):
                 json.dump(json_data, f)
 
 # 언어 감지 함수
-
-
 def detect_language(query):
     language = detect(query)
     return language
@@ -203,6 +202,7 @@ def make_rag_chain(query):
     response_docs = rag_chain_debug["context"].invoke({"question": query_text})
     response_docs1 = rag_chain_debug["context1"].invoke({"question": query_text})
     response_docs2 = find_most_similar_doc(response_docs1[0].metadata['summary'].content)
+
 
     # 'contextual_prompt'를 사용하여 프롬프트를 생성합니다.
     prompt_messages = contextual_prompt.format_messages(
@@ -258,6 +258,7 @@ def update_vector_db(question, answer):
     # 새로운 벡터를 FAISS DB에 추가
     vector_store_rate.add_texts([combined_text], embeddings=[new_embedding])
 
+
 def chatbot(query, isVoice):
     # 기본 메시지 화면에 표시
     for message in st.session_state["messages"]:
@@ -301,6 +302,7 @@ if st.button("마이크"):             # 마이크 입력시 보이스 재생
     user_input = Speech.get_audio_input()
     if user_input is not None:
         chatbot(user_input, True)
+
 
 if st.button("데이터 저장"):
     # FAISS 인덱스를 로컬에 저장
