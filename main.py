@@ -16,7 +16,37 @@ translate_model = ChatOpenAI(model="gpt-4o-mini")
 
 # 실시간 스트리밍을 지원하는 모델 설정
 # mode = openai.ChatCompletion  # OpenAI의 ChatCompletion을 사용
-
+st.markdown(
+    """
+    <style>
+        .stMainBlockContainer .stButton button {
+            font-size: 20px;
+            color: white;
+            background-color: rgb(255, 75, 75);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        .stMainBlockContainer .stButton button[data-testid="stBaseButton-primary"] {
+            position: fixed;
+            padding: 1px 10px;
+            bottom: 50px;
+            left: 550px;
+        }
+        .stMainBlockContainer .stButton button[data-testid="stBaseButton-primary"] p {
+            font-size: 32px;
+        }
+        .stMainBlockContainer .stButton button[data-testid="stBaseButton-secondary"] {
+            position: fixed;
+            top: 150px;
+            right: 100px;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 st.title("교통사고 과실 비율 챗봇")
 
 placeholder = st.empty()
@@ -65,7 +95,7 @@ def init():
     if "side_data" not in st.session_state: # 사이드바에 표시하기위한 데이터
         st.session_state["side_data"] = []
     if 'rerun' not in st.session_state:
-        st.session_state.rerun = False
+        st.session_state["rerun"] = False
 
     # 대화내역 불러오기 위한 데이터 초기화
     if os.path.isdir(now_dir + "/History"):
@@ -238,11 +268,11 @@ def update_vector_db(question, answer):
 
     # 외국어로 되어있는 경우 번역 진행
     decoded_question = translate_chain1.invoke(
-        {"language": detect_language(decoded_question), "text": query})
+        {"language": detect_language(decoded_question), "text": question})
     decoded_question = decoded_question.content if hasattr(
         decoded_question, "content") else decoded_question
     decoded_answer = translate_chain1.invoke(
-        {"language": detect_language(decoded_answer), "text": query})
+        {"language": detect_language(decoded_answer), "text": answer})
     decoded_answer = decoded_answer.content if hasattr(
         decoded_answer, "content") else decoded_answer
 
@@ -299,16 +329,16 @@ def chatbot(query, isVoice):
         if isVoice:     # isVoice 파라미터에 따라 읽기
             Speech.text_to_speech(response)
 
-if st.button("마이크"):             # 마이크 입력시 보이스 재생
+if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
     user_input = Speech.get_audio_input()
     if user_input is not None:
         chatbot(user_input, True)
 
-
-if st.button("데이터 저장"):
+if st.button("데이터 저장", type="secondary"):
     # FAISS 인덱스를 로컬에 저장
     vector_store_rate.save_local('vector_store_rate')
     st.success("데이터가 성공적으로 저장되었습니다. 다시 시작하려면 페이지를 새로고침하세요.")
 
-if query := st.chat_input("Say something"):        # 채팅 입력시
+query = st.chat_input("메시지를 입력해주세요", key="fixed_chat_input")
+if query:
     chatbot(query, False)
