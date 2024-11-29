@@ -1,14 +1,18 @@
 from Modules.ModuleImport import *  # 모든 모듈을 불러옵니다.
+load_dotenv()
 from Modules.VectorStore import *
 from Modules.prompt import contextual_prompt
+from Modules.prompt import translate_template1
+from Modules.prompt import summary_prompt
 from Modules.ContextToPrompt import ContextToPrompt
 from Modules.RetrieverWrapper import RetrieverWrapper
 import Modules.Speech as Speech
 
-load_dotenv()
+
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 now_dir = os.getcwd()
-chat_model = ChatOpenAI(model="gpt-4o-mini")
+translate_model = ChatOpenAI(model="gpt-4o-mini")
+
 
 # 실시간 스트리밍을 지원하는 모델 설정
 # mode = openai.ChatCompletion  # OpenAI의 ChatCompletion을 사용
@@ -168,8 +172,19 @@ def session_save(data):
                     json_data = []  # 파일이 비어있으면 초기화
                     
                 json_data.append(data)
+
+            if data["role"] == "assistant" and st.session_state["messages"]:
+                question = st.session_state["messages"][-2]["content"]
+                answer = data["content"]
+                update_vector_db(question, answer)
+
             with open(active_file, 'w', encoding='UTF8') as f:
                 json.dump(json_data, f)
+
+# 언어 감지 함수
+def detect_language(query):
+    language = detect(query)
+    return language
 
 def make_rag_chain(query):
         # RAG 체인 정의
@@ -177,24 +192,72 @@ def make_rag_chain(query):
         "context": RetrieverWrapper(retriever),
         "context1": RetrieverWrapper(retriever1),
         'context2': RetrieverWrapper(retriever2),
-        "prompt": ContextToPrompt(contextual_prompt),
-        "llm": chat_model  # mode는 이제 OpenAI의 ChatCompletion 객체
     }
 
+    # 번역 및 query 변환
+    query_text = translate_chain1.invoke({"language": detect_language(query), "text": query})
+    query_text = query_text.content if hasattr(query_text, "content") else query_text
+
     # 1. 검색 단계: context, context1, context2로부터 관련 정보 검색
-    response_docs = rag_chain_debug["context"].invoke({"question": query})
-    response_docs1 = rag_chain_debug["context1"].invoke({"question": query})
-    response_docs2 = find_most_similar_doc(
-        response_docs1[0].metadata['summary'].content)
+    response_docs = rag_chain_debug["context"].invoke({"question": query_text})
+    response_docs1 = rag_chain_debug["context1"].invoke({"question": query_text})
+    response_docs2 = find_most_similar_doc(response_docs1[0].metadata['summary'].content)
+
 
     # 'contextual_prompt'를 사용하여 프롬프트를 생성합니다.
     prompt_messages = contextual_prompt.format_messages(
         context=response_docs,  # 검색된 context 데이터
         context1=response_docs1,  # 검색된 context1 데이터
         context2=response_docs2,  # 검색된 context2 데이터
-        question=query  # 사용자의 질문
+        question=query_text,  # 사용자의 질문
+        language=detect_language(query)  
     )
     return prompt_messages
+
+
+
+# 사고 상황을 요약하는 함수 (LLM 모델 사용)
+def summarize_accident(accident_text):
+    summary = summary_prompt.format_messages(content=accident_text)
+    result = translate_model.invoke(summary)
+    return result  # 요약된 사고 상황 반환
+
+
+# 사용자 입력 -> 모델
+translate_chain1 = translate_template1 | translate_model
+
+
+# 세션 데이터를 벡터 DB에 저장하는 함수
+def update_vector_db(question, answer):
+    """
+    사용자 질의와 응답 데이터를 벡터 DB에 추가합니다.
+    """
+    # 이스케이프 문자열을 정상적인 텍스트로 디코딩
+    decoded_question = bytes(question, 'utf-8').decode('unicode_escape')
+    decoded_answer = bytes(answer, 'utf-8').decode('unicode_escape')
+
+    # 외국어로 되어있는 경우 번역 진행
+    decoded_question = translate_chain1.invoke(
+        {"language": detect_language(decoded_question), "text": query})
+    decoded_question = decoded_question.content if hasattr(
+        decoded_question, "content") else decoded_question
+    decoded_answer = translate_chain1.invoke(
+        {"language": detect_language(decoded_answer), "text": query})
+    decoded_answer = decoded_answer.content if hasattr(
+        decoded_answer, "content") else decoded_answer
+
+    # 사용자 입력 사고 내용 요약
+    summarize_quesetion = summarize_accident(decoded_question)
+
+    # 디코딩된 질문과 응답을 하나의 텍스트로 결합
+    combined_text = f"질문: {summarize_quesetion}\n응답: {decoded_answer}"
+
+    # 텍스트를 벡터화
+    new_embedding = embeddings.embed_query(combined_text)
+
+    # 새로운 벡터를 FAISS DB에 추가
+    vector_store_rate.add_texts([combined_text], embeddings=[new_embedding])
+
 
 def chatbot(query, isVoice):
     # 기본 메시지 화면에 표시
@@ -208,28 +271,28 @@ def chatbot(query, isVoice):
 
     with st.chat_message("user"):  # 사용자 채팅 표시
         st.write(query)
-    
-    # 메시지를 'role'과 'content'로 변환하여 전달
-    with st.chat_message("assistant"):  # 답변 채팅 표시 - stream 실시간 채팅
-        prompt_message = make_rag_chain(query)
-        llm_response = chat_model.invoke(prompt_message)
-        response = llm_response.content
-        print(response)
-        st.write(response)
 
-        # stream = client.chat.completions.create(
-        #     model=st.session_state["openai_model"],
-        #     messages = [
-        #         {"role": m["role"], "content": m["content"]}
-        #         for m in st.session_state.messages
-        #     ],
-        #     stream=True,
-        # )
-        # response = st.write_stream(stream)
+    # 어시스턴트 메시지 출력
+    with st.chat_message("assistant"):
+        # 스트림 생성
+        stream = client.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[
+                *[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                *[
+                    {"role": "system", "content": make_rag_chain(query)[0].content},
+                    {"role": "user", "content": make_rag_chain(query)[1].content},
+                ],
+            ],
+            stream=True,
+        )
+        response = st.write_stream(stream)
 
         data = {"role":"assistant", "content":response}
-        st.session_state.messages.append({"role":"assistant", "content":response})
-        
+        st.session_state.messages.append(data)
         session_save(data)
 
         if isVoice:     # isVoice 파라미터에 따라 읽기
@@ -240,5 +303,11 @@ if st.button("마이크"):             # 마이크 입력시 보이스 재생
     if user_input is not None:
         chatbot(user_input, True)
 
-if query := st.chat_input("메시지를 입력해주세요 "):        # 채팅 입력시
+
+if st.button("데이터 저장"):
+    # FAISS 인덱스를 로컬에 저장
+    vector_store_rate.save_local('vector_store_rate')
+    st.success("데이터가 성공적으로 저장되었습니다. 다시 시작하려면 페이지를 새로고침하세요.")
+
+if query := st.chat_input("Say something"):        # 채팅 입력시
     chatbot(query, False)

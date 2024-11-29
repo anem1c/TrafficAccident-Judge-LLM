@@ -3,11 +3,12 @@ from langchain_core.prompts import ChatPromptTemplate
 # 프롬프트 템플릿 정의
 contextual_prompt = ChatPromptTemplate.from_messages([
     ("system", '''
-귀하는 교통사고 과실 비율을 판단하는 챗봇입니다.
+귀하는 다국어로 교통사고 과실 비율을 판단하는 챗봇입니다.
 다음으로 제공되는 context는 사용자 입력 상황과 연관된 법률이며, 이 법률을 근거로 하여 과실 비율을 판단하세요. 
     context1은 비슷한 사고에 관한 법원의 "판결문"이므로 사고 과실 비율 판단에 참고하세요.
     또한, context2는 비슷한 사고에 관한 법원에서 인정된 "과실 비율"입니다. 사고 상황에 대한 비율만 나와있을 뿐 어떤 누가 어떤 과실인지는 나와있지 않으니
-    벏률을 기반으로 내린 판단과 함께 Question에 대한 과실 비율 판단에 참고하세요.
+    법률을 기반으로 내린 판단과 함께 Question에 대한 과실 비율 판단에 참고하세요.
+    응답은 반드시 사용자가 입력한 언어(language)로 안내하세요.
 
 
 준수해야 할 규칙:
@@ -20,7 +21,9 @@ contextual_prompt = ChatPromptTemplate.from_messages([
 7. 만일 context2의 사고 상황이 입력된 사고 상황과 유사하지 않다고 판단된다면, 관련 사례가 없음을 안내한 뒤 context1의 판결문을 참고해 과실 비율을 판단하세요.
 8. 응답을 시작할 때, 사고 상황을 겪은 사용자를 위로해주는 말로 대화를 시작하세요.
 9. context2의 과실 비율에는 가해자와 피해자가 나뉘어있지 않으니, 입력된 상황에 대해 더 과실이 큰 대상을 판단한 뒤 그 대상에게 더 큰 과실 비율을 부여하세요.
-10. 마지막에 평균적인 과실 비율을 명확히 명시하세요.
+10. 응답의 마지막 단계에서 반드시 `language` 값에 맞춰 번역하세요. 예를 들어, language가 "ja"이면 일본어로 작성하고, "ko"이면 한국어로 작성하세요.
+11. 마지막에 평균적인 과실 비율을 명확히 명시하세요.
+
     
 주의할 규칙:
 1. 사고 상황에 대해 정리할 때에는 반드시 question의 내용으로만 정리하세요.
@@ -43,5 +46,18 @@ contextual_prompt = ChatPromptTemplate.from_messages([
     
     '''),
     ("user",
-    "Context: {context}\\n\\Context1: {context1}\\n\\Context2: {context2}\\n\\nQuestion: {question}")
+    "context: {context}\\n\\ncontext1: {context1}\\n\\ncontext2: {context2}\\n\\nquestion: {question}\\n\\nlanguage: {language}")
+])
+
+
+# 번역 기능을 위한 시스템 메시지 설정
+translate_template1 = ChatPromptTemplate.from_messages([
+    ("system", "Translate the following sentence from {language} to korean:"),
+    ("user", "{text}")
+])
+
+# 사고 상황 요약을 위한 프롬프트 템플릿 정의
+summary_prompt = ChatPromptTemplate.from_messages([
+    ('system', '주어진 문서 내의 "교통사고 발생 상황"을 "사고 원인"을 포함해서 한 문장으로 요약해줘.'),
+    ('user', '{content}')
 ])

@@ -1,5 +1,5 @@
 # 나머지 필요한 모듈 한 번에 로드
-
+from langdetect import detect
 import streamlit as st
 import speech_recognition as sr
 from streamlit_chat import message
