@@ -38,11 +38,6 @@ st.markdown(
         .stMainBlockContainer .stButton button[data-testid="stBaseButton-primary"] p {
             font-size: 32px;
         }
-        .stMainBlockContainer .stButton button[data-testid="stBaseButton-secondary"] {
-            position: fixed;
-            top: 150px;
-            right: 100px;
-        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -203,6 +198,7 @@ def session_save(data):
                     
                 json_data.append(data)
 
+            # vector DB 업데이트
             if data["role"] == "assistant" and st.session_state["messages"]:
                 question = st.session_state["messages"][-2]["content"]
                 answer = data["content"]
@@ -233,7 +229,6 @@ def make_rag_chain(query):
     response_docs1 = rag_chain_debug["context1"].invoke({"question": query_text})
     response_docs2 = find_most_similar_doc(response_docs1[0].metadata['summary'].content)
 
-
     # 'contextual_prompt'를 사용하여 프롬프트를 생성합니다.
     prompt_messages = contextual_prompt.format_messages(
         context=response_docs,  # 검색된 context 데이터
@@ -243,8 +238,6 @@ def make_rag_chain(query):
         language=detect_language(query)  
     )
     return prompt_messages
-
-
 
 # 사고 상황을 요약하는 함수 (LLM 모델 사용)
 def summarize_accident(accident_text):
@@ -287,7 +280,7 @@ def update_vector_db(question, answer):
 
     # 새로운 벡터를 FAISS DB에 추가
     vector_store_rate.add_texts([combined_text], embeddings=[new_embedding])
-
+    vector_store_rate.save_local('vector_store_rate')
 
 def chatbot(query, isVoice):
     # 기본 메시지 화면에 표시
@@ -333,11 +326,6 @@ if st.button(":material/mic:", type="primary"):             # 마이크 입력�
     user_input = Speech.get_audio_input()
     if user_input is not None:
         chatbot(user_input, True)
-
-if st.button("데이터 저장", type="secondary"):
-    # FAISS 인덱스를 로컬에 저장
-    vector_store_rate.save_local('vector_store_rate')
-    st.success("데이터가 성공적으로 저장되었습니다. 다시 시작하려면 페이지를 새로고침하세요.")
 
 query = st.chat_input("메시지를 입력해주세요", key="fixed_chat_input")
 if query:
