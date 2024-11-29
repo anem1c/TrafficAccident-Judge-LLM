@@ -272,6 +272,7 @@ def chatbot(query, isVoice):
     with st.chat_message("user"):  # 사용자 채팅 표시
         st.write(query)
 
+    chain_response = make_rag_chain(query)
     # 어시스턴트 메시지 출력
     with st.chat_message("assistant"):
         # 스트림 생성
@@ -283,8 +284,8 @@ def chatbot(query, isVoice):
                     for m in st.session_state.messages
                 ],
                 *[
-                    {"role": "system", "content": make_rag_chain(query)[0].content},
-                    {"role": "user", "content": make_rag_chain(query)[1].content},
+                    {"role": "system", "content": chain_response[0].content},
+                    {"role": "user", "content": chain_response[1].content},
                 ],
             ],
             stream=True,
