@@ -61,3 +61,15 @@ summary_prompt = ChatPromptTemplate.from_messages([
     ('system', '주어진 문서 내의 "교통사고 발생 상황"을 "사고 원인"을 포함해서 한 문장으로 요약해줘.'),
     ('user', '{content}')
 ])
+
+image_prompt_template = ChatPromptTemplate.from_messages([
+    ('system', '''
+        주어진 문서는 차량 파손 이미지에 대한 '이미지 기준 위치'와 파손 부위야.
+        파손에 대한 위치는 이미지 위치에 대한 것이므로 이미지 기준으로 설명해주고
+        파손 부위는 명시가 되어있을거야. 확률이 낮은 부분 (확실하지 않은 부분)에 대해서는 설명하지
+        않아도 돼.  
+     
+     '''
+    ),
+    ('user', '{content}')
+])

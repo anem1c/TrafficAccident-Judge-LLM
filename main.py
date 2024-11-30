@@ -4,6 +4,7 @@ from Modules.VectorStore import *
 from Modules.prompt import contextual_prompt
 from Modules.prompt import translate_template1
 from Modules.prompt import summary_prompt
+from Modules.prompt import image_prompt_template
 from Modules.ContextToPrompt import ContextToPrompt
 from Modules.RetrieverWrapper import RetrieverWrapper
 import Modules.Speech as Speech
@@ -246,7 +247,6 @@ def summarize_accident(accident_text):
     result = translate_model.invoke(summary)
     return result  # 요약된 사고 상황 반환
 
-
 # 사용자 입력 -> 모델
 translate_chain1 = translate_template1 | translate_model
 
@@ -328,16 +328,27 @@ def chatbot(query, isType):
 uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
 if uploaded_file is not None:
     image_query,image = get_image_input(uploaded_file)
-    print(image_query)
     if(image_query == ''): # 이미지를 인식할 수 없을 때
         with st.chat_message("assistant"):
             st.warning(
                 "죄송합니다. 이미지를 인식할 수 없습니다. 다른 이미지로 시도해주세요."
             )
     else:
-        # 감지된 결과 이미지 표시
-        st.image(image, caption="감지된 결과", use_container_width=True)
-        chatbot(image_query,'image') # return 감지텍스트,이미지
+        # 사용자 메시지 표시
+        with st.chat_message("user"):  
+            st.write("위 이미지에 대해서 설명해줘.")
+            # AI 응답 처리
+        with st.chat_message("assistant"):
+            st.image(image, caption="감지된 결과", use_container_width=True)
+            # 이미지에 대한 파손 부위 분석을 위한 프롬프트 생성
+            prompt = image_prompt_template.format_messages(content=image_query)
+            # AI 모델에 대한 응답 요청 (ChatOpenAI 모델 사용)
+            response = translate_model.invoke(prompt)
+            
+            # 응답을 화면에 표시
+            st.write(response.content)
+
+        
 
 if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
     user_input = Speech.get_audio_input()
