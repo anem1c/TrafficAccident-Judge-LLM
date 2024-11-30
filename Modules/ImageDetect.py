@@ -87,12 +87,9 @@ detection = Detection(
 )
 
 def get_image_input(uploaded_file):
-        # PIL로 이미지 불러오기
+    # PIL로 이미지 불러오기
     image = Image.open(uploaded_file)
     image = np.array(image)
-
-    # 원본 이미지 표시
-    # st.image(image, caption="업로드한 이미지", use_container_width=True)
 
     # 객체 감지 수행
     results = detection(image)
@@ -107,15 +104,17 @@ def get_image_input(uploaded_file):
     mid_width = image_width // 2
     mid_height = image_height // 2
 
-    # 각 영역에 해당하는 객체 출력
-    st.write("감지된 객체 위치:")
-    for i in range(len(boxes)):
-        box = boxes[i]
-        label = labels[i]
-        confidence = confidences[i]
+    # 결과 텍스트를 저장할 리스트
+    detection_results = []
+
+    # 이미지에 감지 결과 그리기
+    for box, label, confidence in zip(boxes, labels, confidences):
+        x, y, w, h = box
+        image = cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        text = f"{label} ({100-confidence:.2f}%)"
+        cv2.putText(image, text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
         # 바운딩 박스 중심점 계산
-        x, y, w, h = box
         center_x = x + w // 2
         center_y = y + h // 2
 
@@ -132,16 +131,17 @@ def get_image_input(uploaded_file):
         # 영문 레이블을 한글로 변환
         korean_label = class_mapping.get(label, label)
 
-        # 위치와 함께 출력
-        st.write(f"{position}: {korean_label} - 신뢰도: {100-confidence:.2f}%")
-
-    # 이미지에 감지 결과 그리기 (선택적)
-    for box, label, confidence in zip(boxes, labels, confidences):
-        x, y, w, h = box
-        image = cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        # korean_label = class_mapping.get(label, label)  # 한글 레이블로 변환
-        text = f"{label} ({100-confidence:.2f}%)"
-        cv2.putText(image, text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        # 결과를 리스트에 저장
+        result_text = f"{position}: {korean_label} - 신뢰도: {100-confidence:.2f}%"
+        detection_results.append(result_text)
 
     # 감지된 결과 이미지 표시
     st.image(image, caption="감지된 결과", use_container_width=True)
+
+    # LLM 모델에 전달할 결과를 텍스트로 결합
+    detection_text = "\n".join(detection_results)
+    
+    # 이제 detection_text를 LLM 모델에 전달
+    # 예시: response = llm_model(detection_text)
+    return detection_text
+
