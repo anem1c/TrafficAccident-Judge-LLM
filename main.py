@@ -327,10 +327,17 @@ def chatbot(query, isType):
 # 이미지 업로드
 uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
 if uploaded_file is not None:
-    query,image = get_image_input(uploaded_file)
-    # 감지된 결과 이미지 표시
-    st.image(image, caption="감지된 결과", use_container_width=True)
-    chatbot(query,'image') # return 감지텍스트,이미지
+    image_query,image = get_image_input(uploaded_file)
+    print(image_query)
+    if(image_query == ''): # 이미지를 인식할 수 없을 때
+        with st.chat_message("assistant"):
+            st.warning(
+                "죄송합니다. 이미지를 인식할 수 없습니다. 다른 이미지로 시도해주세요."
+            )
+    else:
+        # 감지된 결과 이미지 표시
+        st.image(image, caption="감지된 결과", use_container_width=True)
+        chatbot(image_query,'image') # return 감지텍스트,이미지
 
 if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
     user_input = Speech.get_audio_input()
