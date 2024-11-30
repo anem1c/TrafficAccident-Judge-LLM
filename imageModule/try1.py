@@ -87,7 +87,6 @@ detection = Detection(
 )
 
 # Streamlit UI
-st.title("자동차 손상 감지")
 uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:

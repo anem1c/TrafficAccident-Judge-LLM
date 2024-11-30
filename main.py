@@ -7,6 +7,7 @@ from Modules.prompt import summary_prompt
 from Modules.ContextToPrompt import ContextToPrompt
 from Modules.RetrieverWrapper import RetrieverWrapper
 import Modules.Speech as Speech
+from Modules.ImageDetect import class_mapping,detection,Detection
 
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -321,6 +322,69 @@ def chatbot(query, isVoice):
 
         if isVoice:     # isVoice 파라미터에 따라 읽기
             Speech.text_to_speech(response)
+
+# Streamlit UI
+uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
+
+if uploaded_file is not None:
+    # PIL로 이미지 불러오기
+    image = Image.open(uploaded_file)
+    image = np.array(image)
+
+    # 원본 이미지 표시
+    # st.image(image, caption="업로드한 이미지", use_container_width=True)
+
+    # 객체 감지 수행
+    results = detection(image)
+
+    # 결과를 변수에 저장 (바운딩 박스, 레이블, 신뢰도 점수)
+    boxes = results['boxes']
+    labels = results['classes']
+    confidences = results['confidences']
+
+    # 이미지 크기 기준으로 영역 나누기 (좌측 상단, 우측 상단, 좌측 하단, 우측 하단)
+    image_height, image_width = image.shape[:2]
+    mid_width = image_width // 2
+    mid_height = image_height // 2
+
+    # 각 영역에 해당하는 객체 출력
+    st.write("감지된 객체 위치:")
+    for i in range(len(boxes)):
+        box = boxes[i]
+        label = labels[i]
+        confidence = confidences[i]
+
+        # 바운딩 박스 중심점 계산
+        x, y, w, h = box
+        center_x = x + w // 2
+        center_y = y + h // 2
+
+        # 객체가 어느 영역에 속하는지 확인
+        if center_x < mid_width and center_y < mid_height:
+            position = "좌측 상단"
+        elif center_x >= mid_width and center_y < mid_height:
+            position = "우측 상단"
+        elif center_x < mid_width and center_y >= mid_height:
+            position = "좌측 하단"
+        else:
+            position = "우측 하단"
+
+        # 영문 레이블을 한글로 변환
+        korean_label = class_mapping.get(label, label)
+
+        # 위치와 함께 출력
+        st.write(f"{position}: {korean_label} - 신뢰도: {100-confidence:.2f}%")
+
+    # 이미지에 감지 결과 그리기 (선택적)
+    for box, label, confidence in zip(boxes, labels, confidences):
+        x, y, w, h = box
+        image = cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        # korean_label = class_mapping.get(label, label)  # 한글 레이블로 변환
+        text = f"{label} ({100-confidence:.2f}%)"
+        cv2.putText(image, text, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+    # 감지된 결과 이미지 표시
+    st.image(image, caption="감지된 결과", use_container_width=True)
 
 if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
     user_input = Speech.get_audio_input()
