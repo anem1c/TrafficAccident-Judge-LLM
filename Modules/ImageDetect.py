@@ -1,4 +1,3 @@
-import streamlit as st
 import cv2
 import numpy as np
 from typing import List, Tuple
@@ -135,13 +134,11 @@ def get_image_input(uploaded_file):
         result_text = f"{position}: {korean_label} - 신뢰도: {100-confidence:.2f}%"
         detection_results.append(result_text)
 
-    # 감지된 결과 이미지 표시
-    st.image(image, caption="감지된 결과", use_container_width=True)
 
     # LLM 모델에 전달할 결과를 텍스트로 결합
     detection_text = "\n".join(detection_results)
     
     # 이제 detection_text를 LLM 모델에 전달
     # 예시: response = llm_model(detection_text)
-    return detection_text
+    return detection_text,image
 

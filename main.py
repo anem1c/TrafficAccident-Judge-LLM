@@ -283,7 +283,7 @@ def update_vector_db(question, answer):
     vector_store_rate.add_texts([combined_text], embeddings=[new_embedding])
     vector_store_rate.save_local('vector_store_rate')
 
-def chatbot(query, isVoice):
+def chatbot(query, isType):
     # 기본 메시지 화면에 표시
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
@@ -295,8 +295,9 @@ def chatbot(query, isVoice):
 
     with st.chat_message("user"):  # 사용자 채팅 표시
         st.write(query)
+        chain_response = make_rag_chain(query)
 
-    chain_response = make_rag_chain(query)
+
     # 어시스턴트 메시지 출력
     with st.chat_message("assistant"):
         # 스트림 생성
@@ -320,19 +321,22 @@ def chatbot(query, isVoice):
         st.session_state.messages.append(data)
         session_save(data)
 
-        if isVoice:     # isVoice 파라미터에 따라 읽기
+        if isType == 'voice':     # voice 파라미터에 따라 읽기
             Speech.text_to_speech(response)
 
 # 이미지 업로드
 uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
 if uploaded_file is not None:
-    get_image_input(uploaded_file)
+    query,image = get_image_input(uploaded_file)
+    # 감지된 결과 이미지 표시
+    st.image(image, caption="감지된 결과", use_container_width=True)
+    chatbot(query,'image') # return 감지텍스트,이미지
 
 if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
     user_input = Speech.get_audio_input()
     if user_input is not None:
-        chatbot(user_input, True)
+        chatbot(user_input, 'voice')
 
 query = st.chat_input("메시지를 입력해주세요", key="fixed_chat_input")
 if query:
-    chatbot(query, False)
+    chatbot(query, 'text')
