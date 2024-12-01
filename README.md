@@ -17,6 +17,8 @@
 
 ```sh
 git clone https://github.com/anem1c/TrafficAccident-Judge-LLM.git
+
+pip install -r requirements.txt
 ```
 
 ```sh
@@ -25,20 +27,9 @@ streamlit run main.py
 
 ## 사용 예시
 
-A few motivating and useful examples of how your product can be used. Spice this up with code blocks and potentially more screenshots.
+작동 영상
 
-_For more examples and usage, please refer to the [Wiki][wiki]._
-
-## Development setup
-
-Describe how to install all development dependencies and how to run an automated test-suite of some kind. Potentially do this for multiple platforms.
-
-```sh
-make install
-npm test
-```
-
-## Release History
+## 업데이트 사항
 
 * 0.2.1
     * CHANGE: Update docs (module code remains unchanged)
@@ -61,7 +52,7 @@ Distributed under the XYZ license. See ``LICENSE`` for more information.
 
 [https://github.com/yourname/github-link](https://github.com/dbader/)
 
-## Contributing
+## 트러블 슈팅
 
 1. Fork it (<https://github.com/yourname/yourproject/fork>)
 2. Create your feature branch (`git checkout -b feature/fooBar`)
