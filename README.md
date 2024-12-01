@@ -2,11 +2,13 @@
 
 
 프로젝트 개요
-![optimized_ezgif-1-0d67d6d6ea](https://github.com/user-attachments/assets/b45de8be-e2c2-4f44-a851-70e0fdcde50f)
+
 
 팀 명
 
-프로젝트 일정![Uploading ezgif-1-5786c4c34b.gif…]()
+프로젝트 일정
+
+![Uploading TrafficAccident_Demo-ezgif.com-optimize.gif…]()
 
 
 기능 소개
