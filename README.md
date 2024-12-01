@@ -1,10 +1,18 @@
 # 교통사고 과실 비율 챗봇
+
+
+<div align="left">
+    <img src="https://img.shields.io/badge/OpenAI-412991?style=flat&logo=OpenAI&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white">
+    <img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=Python&logoColor=white">
+</div>
+
+
+
+---
+
 > [교통사고 주요 판례](https://xn--vb0b6f546cmsg6pn.com/sub/preced/preced01.asp)와 [교통사고 과실 비율](https://accident.knia.or.kr/example1#0) 학습을 통하여 사용자의 입력을 통해 사고상황 요약 및 과실을 책정해주는 챗봇입니다.
 
-
-[![NPM Version][npm-image]][npm-url]
-[![Build Status][travis-image]][travis-url]
-[![Downloads Stats][npm-downloads]][npm-url]
 
 ---
 
@@ -17,6 +25,8 @@
 
 ```sh
 git clone https://github.com/anem1c/TrafficAccident-Judge-LLM.git
+
+cd TrafficAccident-Judge-LLM
 
 pip install -r requirements.txt
 ```
