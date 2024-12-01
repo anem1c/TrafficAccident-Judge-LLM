@@ -99,6 +99,7 @@ pure_eval @ file:///home/conda/feedstock_root/build_artifacts/pure_eval_17215857
 pyarrow==18.1.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
+PyAudio==0.2.14
 pydantic==2.10.2
 pydantic-settings==2.6.1
 pydantic_core==2.27.1
