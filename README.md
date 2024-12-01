@@ -8,7 +8,8 @@
 
 프로젝트 일정
 
-![Uploading TrafficAccident_Demo-ezgif.com-optimize.gif…]()
+![TrafficAccident_Demo-ezgif com-optimize](https://github.com/user-attachments/assets/1afac55a-580a-4d42-b8b2-9ca599dd8d97)
+
 
 
 기능 소개
