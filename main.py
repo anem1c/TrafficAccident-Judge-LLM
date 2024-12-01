@@ -330,9 +330,12 @@ if uploaded_file is not None:
     image_query,image = get_image_input(uploaded_file)
     if(image_query == ''): # 이미지를 인식할 수 없을 때
         with st.chat_message("assistant"):
-            st.warning(
+            response = st.warning(
                 "죄송합니다. 이미지를 인식할 수 없습니다. 다른 이미지로 시도해주세요."
             )
+            data = {"role":"assistant", "content":response}
+            st.session_state.messages.append(data)
+            session_save(data)
     else:
         # 사용자 메시지 표시
         with st.chat_message("user"):  
