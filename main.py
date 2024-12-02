@@ -211,8 +211,10 @@ def session_save(data):
 
 # 언어 감지 함수
 def detect_language(query):
-    language = detect(query)
-    return language
+    try:
+        return detect(query)  # 정상적으로 언어 감지
+    except LangDetectException:
+        return "ko"  # 실패 시 "ko" 반환
 
 def make_rag_chain(query):
         # RAG 체인 정의
