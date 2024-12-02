@@ -21,6 +21,10 @@ translate_model = ChatOpenAI(model="gpt-4o-mini")
 st.markdown(
     """
     <style>
+        div[data-testid="stSidebarUserContent"] .stButton button div {
+            max-height: 24px;
+            overflow-y: hidden;
+        }
         .stMainBlockContainer .stButton button {
             font-size: 20px;
             color: white;
@@ -104,7 +108,7 @@ def init():
             for file in prompt_file:
                 with open(now_dir + "/History/" + file, 'r', encoding='UTF8') as f:
                     json_data = json.load(f)
-                    side_title = json_data[0]["content"][0:10]
+                    side_title = json_data[0]["content"][0:20]
                     st.session_state.side_data.append({side_title:file})
 init()
 
@@ -177,7 +181,7 @@ def session_save(data):
             with open(history_dir + file_name, 'w', encoding='UTF8') as f:
                 json.dump([data], f)
 
-                room_name = data["content"][0:10]
+                room_name = data["content"][0:20]
                 st.session_state["active"] = file_name
                 st.session_state.side_data.insert(0,{room_name:file_name})
                 
