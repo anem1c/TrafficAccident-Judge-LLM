@@ -21,6 +21,9 @@ translate_model = ChatOpenAI(model="gpt-4o-mini")
 st.markdown(
     """
     <style>
+        div[data-testid="stToolbar"] {
+            display:none;
+        }
         div[data-testid="stSidebarUserContent"] .stButton button div {
             max-height: 24px;
             overflow-y: hidden;
@@ -115,11 +118,11 @@ init()
 # 사이드바
 with st.sidebar:
     # 대화방 추가
-    if st.button("새로운 방", type="primary"):
+    if st.button("방 만들기", type="primary"):
         st.session_state["messages"] = []
         st.session_state["active"] = ""
 
-    st.title('Chat Rooms')
+    st.title('채팅 내역')
     sidebar_placeholder = st.sidebar.empty() # 사이드바에 다른 요소 추가시키기 위함        
     for i, room in enumerate(st.session_state.side_data):
         for room_name, file_name in room.items():
@@ -328,9 +331,21 @@ def chatbot(query, isType):
         if isType == 'voice':     # voice 파라미터에 따라 읽기
             Speech.text_to_speech(response)
 
+
+        
+
+if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
+    user_input = Speech.get_audio_input()
+    if user_input is not None:
+        chatbot(user_input, 'voice')
+
+query = st.chat_input("메시지를 입력해주세요", key="fixed_chat_input")
+if query:
+    chatbot(query, 'text')
+
 # 이미지 업로드
 uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
-if uploaded_file is not None:
+if uploaded_file is not None and query is None:
     # 기본 메시지 화면에 표시
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
@@ -372,15 +387,3 @@ if uploaded_file is not None:
             st.session_state.messages.append(data)
             session_save(data)
 
-
-
-        
-
-if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
-    user_input = Speech.get_audio_input()
-    if user_input is not None:
-        chatbot(user_input, 'voice')
-
-query = st.chat_input("메시지를 입력해주세요", key="fixed_chat_input")
-if query:
-    chatbot(query, 'text')
