@@ -4,9 +4,11 @@ from Modules.VectorStore import *
 from Modules.prompt import contextual_prompt
 from Modules.prompt import translate_template1
 from Modules.prompt import summary_prompt
+from Modules.prompt import image_prompt_template
 from Modules.ContextToPrompt import ContextToPrompt
 from Modules.RetrieverWrapper import RetrieverWrapper
 import Modules.Speech as Speech
+from Modules.ImageDetect import class_mapping,detection,Detection,get_image_input
 
 
 client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -224,7 +226,6 @@ def summarize_accident(accident_text):
     result = translate_model.invoke(summary)
     return result  # 요약된 사고 상황 반환
 
-
 # 사용자 입력 -> 모델
 translate_chain1 = translate_template1 | translate_model
 
@@ -261,7 +262,7 @@ def update_vector_db(question, answer):
     vector_store_rate.add_texts([combined_text], embeddings=[new_embedding])
     vector_store_rate.save_local('vector_store_rate')
 
-def chatbot(query, isVoice):
+def chatbot(query, isType):
     # 기본 메시지 화면에 표시
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
@@ -273,8 +274,9 @@ def chatbot(query, isVoice):
 
     with st.chat_message("user"):  # 사용자 채팅 표시
         st.write(query)
+        chain_response = make_rag_chain(query)
 
-    chain_response = make_rag_chain(query)
+
     # 어시스턴트 메시지 출력
     with st.chat_message("assistant"):
         # 스트림 생성
@@ -298,14 +300,56 @@ def chatbot(query, isVoice):
         st.session_state.messages.append(data)
         session_save(data)
 
-        if isVoice:     # isVoice 파라미터에 따라 읽기
+        if isType == 'voice':     # voice 파라미터에 따라 읽기
             Speech.text_to_speech(response)
+
+# 이미지 업로드
+uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
+if uploaded_file is not None:
+    image_query,image = get_image_input(uploaded_file)
+    if(image_query == ''): # 이미지를 인식할 수 없을 때
+        with st.chat_message("assistant"):
+            response = st.warning(
+                "죄송합니다. 이미지를 인식할 수 없습니다. 다른 이미지로 시도해주세요."
+            )
+            data = {"role":"assistant", "content":response}
+            st.session_state.messages.append(data)
+            session_save(data)
+    else:
+        # 사용자 메시지 표시
+        with st.chat_message("user"):  
+            st.write("위 이미지에 대해서 설명해줘.")
+        st.image(image, caption="감지된 결과", use_container_width=True)
+        # AI 응답 처리
+        with st.chat_message("assistant"):
+            
+            # 이미지에 대한 파손 부위 분석을 위한 프롬프트 생성
+            prompt = image_prompt_template.format_messages(content=image_query)
+            # AI 모델에 대한 응답 요청 (ChatOpenAI 모델 사용)
+            response = translate_model.invoke(prompt)
+            stream = client.chat.completions.create(
+                model=st.session_state["openai_model"],
+                messages = [
+                    *[
+                        {"role": "system", "content":response.content}
+                    ],
+                ],
+                stream = True,
+            )
+            response = st.write_stream(stream)
+            data = {"role":"assistant", "content":response}
+            st.session_state.messages.append(data)
+            session_save(data)
+
+
+
+        
 
 if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
     user_input = Speech.get_audio_input()
     if user_input is not None:
-        chatbot(user_input, True)
+        chatbot(user_input, 'voice')
 
 query = st.chat_input("메시지를 입력해주세요", key="fixed_chat_input")
 if query:
-    chatbot(query, False)
+    chatbot(query, 'text')
