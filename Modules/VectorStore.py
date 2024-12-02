@@ -8,11 +8,11 @@ embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
 # 로컬에서 로드
 vector_store_law = FAISS.load_local(
-    'vector_store_law', embeddings, allow_dangerous_deserialization=True)
+    'Resources/vector_store_law', embeddings, allow_dangerous_deserialization=True)
 vector_store_situation = FAISS.load_local(
-    'vector_store_situation', embeddings, allow_dangerous_deserialization=True)
+    'Resources/vector_store_situation', embeddings, allow_dangerous_deserialization=True)
 vector_store_rate = FAISS.load_local(
-    'vector_store_rate', embeddings, allow_dangerous_deserialization=True)
+    'Resources/vector_store_rate', embeddings, allow_dangerous_deserialization=True)
 
 # 유사성 검색 리트리버 정의
 retriever = vector_store_law.as_retriever(
