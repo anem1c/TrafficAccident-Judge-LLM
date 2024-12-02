@@ -327,6 +327,12 @@ def chatbot(query, isType):
 # 이미지 업로드
 uploaded_file = st.file_uploader("이미지를 업로드하세요", type=["jpg", "png", "jpeg"])
 if uploaded_file is not None:
+    # 기본 메시지 화면에 표시
+    for message in st.session_state["messages"]:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+
+
     image_query,image = get_image_input(uploaded_file)
     if(image_query == ''): # 이미지를 인식할 수 없을 때
         with st.chat_message("assistant"):

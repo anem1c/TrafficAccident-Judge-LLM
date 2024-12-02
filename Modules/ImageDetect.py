@@ -81,7 +81,7 @@ class Detection:
 
 # 모델 경로 및 클래스 정의 (영문)
 detection = Detection(
-    model_path='best.onnx',
+    model_path='Resources/best.onnx',
     classes=['damaged door', 'damaged window', 'damaged headlight', 'damaged mirror', 'dent', 'damaged hood', 'damaged bumper', 'damaged wind shield']
 )
 
