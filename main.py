@@ -18,6 +18,27 @@ translate_model = ChatOpenAI(model="gpt-4o-mini")
 # mode = openai.ChatCompletion  # OpenAI의 ChatCompletion을 사용
 st.markdown(
     """
+    <style>
+        .stMainBlockContainer .stButton button {
+            font-size: 20px;
+            color: white;
+            background-color: rgb(255, 75, 75);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        .stMainBlockContainer .stButton button[data-testid="stBaseButton-primary"] {
+            position: fixed;
+            padding: 1px 10px;
+            bottom: 50px;
+            left: 550px;
+        }
+        .stMainBlockContainer .stButton button[data-testid="stBaseButton-primary"] p {
+            font-size: 32px;
+        }
+    </style>
     """,
     unsafe_allow_html=True,
 )
