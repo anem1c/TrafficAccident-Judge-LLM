@@ -1,4 +1,4 @@
-# 🚘 과시리
+# 🚘 과시리 (교통사고 과실 비율 챗봇)
 
 > [교통사고 주요 판례](https://xn--vb0b6f546cmsg6pn.com/sub/preced/preced01.asp) 와 [교통사고 과실 비율](https://accident.knia.or.kr/example1#0) 학습을 통하여 사용자의 입력을 통해 사고상황 요약 및 과실을 책정해주는 챗봇
 
@@ -9,13 +9,19 @@
 </div>
 
 
-## 목차
+![ezgif-4-7b23355265](https://github.com/user-attachments/assets/76244717-c0d3-417c-ab2c-47fff863fb79)
 
-## 이럴 때 써보세요!
+## 📖 목차
+
+
+
+
+
+## ✅ 이럴 때 사용해보세요!
   * 교통사고 상황에 따른 과실 비율이 궁금할 때
-  * 
+  * 사고 차량 파손 부위가 궁금할 때
 
-## 파일 구조
+## 💾 파일 구조
 <details>
 <div markdown="1">
 
@@ -63,9 +69,6 @@
 </details>
 
 
-## 이렇게 사용하세요 !
-
-![ezgif-4-7b23355265](https://github.com/user-attachments/assets/76244717-c0d3-417c-ab2c-47fff863fb79)
 
 ## 실행 가이드
 ```sh
