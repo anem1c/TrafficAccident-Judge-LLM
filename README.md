@@ -67,8 +67,7 @@
 
 ## 이렇게 사용하세요 !
 
-![ezgif com-crop](https://github.com/user-attachments/assets/15370061-8797-4df5-86e8-e8971bdd208e)
-
+![ezgif-4-7b23355265](https://github.com/user-attachments/assets/76244717-c0d3-417c-ab2c-47fff863fb79)
 
 ## 실행 가이드
 ```sh
