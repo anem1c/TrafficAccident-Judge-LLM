@@ -14,3 +14,4 @@ pyttsx3==2.98
 SpeechRecognition==3.11.0
 streamlit==1.40.1
 streamlit_chat==0.1.1
+streamlit-option-menu=0.4.0
