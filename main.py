@@ -52,7 +52,6 @@ with st.sidebar:
         icons=['house', 'camera'], menu_icon="cast", key="menu_key", default_index=0, on_change=on_change)
 init()
 
-
 menu_dict = {
     "Home" : {"fn": chatbot_main},
     "Image" : {"fn": image_main},
