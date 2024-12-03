@@ -21,7 +21,6 @@
   - [📈 프로젝트 진행 요약 및 업데이트 사항](#-프로젝트-진행-요약-및-업데이트-사항)
   - [🥅 트러블 슈팅](#-트러블-슈팅)
   - [✍️ 회고](#️-회고)
-  - [🧑‍🧑‍🧒 맴버](#-맴버)
 
 
 
@@ -112,16 +111,14 @@ streamlit run main.py
 
 ## ✍️ 회고
 
-> 팀 프로젝트로써 깃 충돌이 많이 일어나 관리에 시간을 많이 들임.
-> 기존 코드에서 
+이시헌 – [PM](https://github.com/anem1c)
+> 첫 팀 프로젝트로써 팀장을 맡게 되어 기뻤습니다. 문서 정리, git 이슈 및 에러 핸들링에서 많은 어려움이 있었지만, 하나 하나 해결해나가면서 프로젝트를 완성시켜갈 때 느껴지는 행복감이 잊혀지지 않습니다.
 
-## 🧑‍🧑‍🧒 맴버
+최창규 – [PL](https://github.com/choichangkyu)
+> streamlit 위주로 개발했는데 커스텀이 안되다 보니까 상당히 답답했구요. 팀원분들이 너무 잘해주시고 소통이 잘돼서 재밌었습니다.
 
-이시헌 – [@](https://twitter.com/dbader_org)
+한예진 – [PE](https://github.com/yejingksdpwls)
+> 초반에는 열정이 넘쳤었던 저였지만, 후반으로 갈 수록 스스로 느껴질 정도로 열정이 떨어진 모습에 제 자신에게 아쉬웠습니다. 하지만 모든 팀원 분들이 열심히 해주시고 부족한 부분들을 잘 채워주셔서 재밌고 만족스럽게 프로젝트를 마무리 할 수 있었던 것 같습니다.
 
-최창규 – [@YourTwitter](https://twitter.com/dbader_org)
-
-한예진 – [@YourTwitter](https://twitter.com/dbader_org)
-
-이명혜 – [@YourTwitter](https://twitter.com/dbader_org)
+이명혜 – [QA](https://github.com/LeeMyunghye)
 
