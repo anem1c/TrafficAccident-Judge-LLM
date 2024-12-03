@@ -67,8 +67,7 @@
 
 ## 이렇게 사용하세요 !
 
-( 대충 챗봇 질문 넣고 답변 받는 GIF)
-
+![ezgif com-crop](https://github.com/user-attachments/assets/15370061-8797-4df5-86e8-e8971bdd208e)
 
 
 ## 실행 가이드
