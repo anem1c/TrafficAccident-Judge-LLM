@@ -13,6 +13,10 @@
 
 ## 목차
 
+## 이럴 때 써보세요!
+  * 교통사고 상황에 따른 과실 비율이 궁금할 때
+  * 
+
 ## 파일 구조
 <details>
 <div markdown="1">
@@ -79,10 +83,6 @@ pip install -r requirements.txt
 ```sh
 streamlit run main.py
 ```
-
-## 사용 예시
-
-작동 영상
 
 ## 프로젝트 진행 요약 및 업데이트 사항
 * 2024-11-20 프로젝트 시작
