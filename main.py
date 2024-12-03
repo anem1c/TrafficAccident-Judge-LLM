@@ -34,9 +34,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
-# 사이트 타이틀
-st.title("과시리")
+st.title("🚘 과시리")
 
 # 사이드바
 with st.sidebar:
