@@ -118,16 +118,16 @@ def chatbot_main():
                         file_path = os.path.join("History", file_name)
                         if os.path.exists(file_path):
                             os.remove(file_path)
-                        del st.session_state["side_data"][i]
+                        del st.session_state["side_data"][i] # 사이드바 데이터 삭제
 
-                        if file_name == st.session_state["active"]:
+                        if file_name == st.session_state["active"]: # 열려있는 대화방인 경우 새로운 대화방 생성
                             st.session_state["messages"] = []
                             st.session_state["active"] = ""
 
-                        st.session_state["rerun"] = True
+                        st.session_state["rerun"] = True        # 리렌더링
 
+    # 리렌더링 감지
     if st.session_state["rerun"]:
-        print("rerun")
         st.session_state["rerun"] = False
         st.rerun()
 
@@ -166,7 +166,6 @@ def chatbot_main():
                         # 동적으로 버튼 추가시 - 클릭이벤트 비정상 작동 - (보류)
                         if st.button(room_name, key=button_key):  # 각 대화방 이름을 버튼으로 출력
                             st.session_state["rerun"] = True
-                            print("new btn")
             # 두번째는 - session_state 값 있음 - update
             elif os.path.isfile(active_file):
                 with open(active_file, 'r', encoding='UTF8') as f:
@@ -197,7 +196,7 @@ def chatbot_main():
             return "ko"  # 실패 시 "ko" 반환
 
     def make_rag_chain(query):
-            # RAG 체인 정의
+        # RAG 체인 정의
         rag_chain_debug = {
             "context": RetrieverWrapper(retriever),
             "context1": RetrieverWrapper(retriever1),
@@ -263,7 +262,7 @@ def chatbot_main():
 
         # 새로운 벡터를 FAISS DB에 추가
         vector_store_rate.add_texts([combined_text], embeddings=[new_embedding])
-        vector_store_rate.save_local('vector_store_rate')
+        vector_store_rate.save_local('Resources/vector_store_rate')
 
     def chatbot(query, isType):
         print(f"챗봇 텍스트 세션 스테이트 : ",st.session_state["messages"])
@@ -278,17 +277,17 @@ def chatbot_main():
 
         with st.chat_message("user"):  # 사용자 채팅 표시
             st.write(query)
-            chain_response = make_rag_chain(query)
-
+        
         # 어시스턴트 메시지 출력
         with st.chat_message("assistant"):
+            chain_response = make_rag_chain(query)
             # 스트림 생성
             stream = client.chat.completions.create(
                 model=st.session_state["openai_model"],
                 messages=[
                     *[
                         {"role": m["role"], "content": m["content"]}
-                        for m in st.session_state.messages
+                        for m in st.session_state["messages"]
                     ],
                     *[
                         {"role": "system", "content": chain_response[0].content},
@@ -300,13 +299,13 @@ def chatbot_main():
             response = st.write_stream(stream)
 
             data = {"role":"assistant", "content":response}
-            st.session_state.messages.append(data)
+            st.session_state["messages"].append(data)
             session_save(data)
 
             if isType == 'voice':     # voice 파라미터에 따라 읽기
                 Speech.text_to_speech(response)
 
-    if st.button(":material/mic:", type="primary"):             # 마이크 입력시 보이스 재생
+    if st.button(":material/mic:", type="primary"):   # 마이크 입력시 보이스 재생
         user_input = Speech.get_audio_input()
         if user_input is not None:
             chatbot(user_input, 'voice')

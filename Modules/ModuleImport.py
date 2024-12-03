@@ -7,9 +7,7 @@ from openai import OpenAI
 import openai
 from dotenv import load_dotenv
 import pyttsx3
-import os
 import json
-from dotenv import load_dotenv
 import os
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
