@@ -90,12 +90,12 @@ def chatbot_main():
 
     # 사이드바
     with st.sidebar:
+        st.title('채팅 내역')
         # 대화방 추가
         if st.button("새로운 방", type="primary"):
             st.session_state["messages"] = []
             st.session_state["active"] = ""
 
-        st.title('채팅 내역')
         sidebar_placeholder = st.sidebar.empty() # 사이드바에 다른 요소 추가시키기 위함        
         for i, room in enumerate(st.session_state["side_data"]):
             for room_name, file_name in room.items():
